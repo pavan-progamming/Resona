@@ -144,7 +144,7 @@ function connectWebSocket() {
     if (socket && socket.readyState === WebSocket.OPEN) return;
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const socketUrl = `${wsProtocol}${window.location.host}`;
+    const socketUrl = 'wss://resona-vz6h.onrender.com';
     
     socket = new WebSocket(socketUrl);
 
