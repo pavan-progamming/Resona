@@ -16,7 +16,7 @@ const authBox = document.querySelector('.auth-box');
 const mainAppHeader = document.querySelector('header');
 
 // --- API ---
-const API_URL = 'http://localhost:3004/api';
+const API_URL = 'https://resona-sc7k.onrender.com/api';
 
 // --- State Variables ---
 let allSongs = new Map();
@@ -381,7 +381,7 @@ function updateSessionUI() {
 
 function connectWebSocket() {
     if (socket && socket.readyState === WebSocket.OPEN) return;
-    const socketUrl = window.location.origin.replace(/^http/, 'ws'); // Use for local dev
+    const socketUrl = 'wss://resona-sc7k.onrender.com'; // Use for local dev
     // const socketUrl = 'wss://your-production-url.com'; // Use for production
     socket = new WebSocket(socketUrl);
 
