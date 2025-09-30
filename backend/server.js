@@ -19,12 +19,12 @@ const server = http.createServer(app);
 // =================================================================
 // Configured for Render's free PostgreSQL tier
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL, // This line remains the same
     ssl: {
-        rejectUnauthorized: false // Required for Render connections
+        rejectUnauthorized: false // This line ALSO remains the same
     }
 });
-console.log('PostgreSQL connection pool created.');
+console.log('PostgreSQL connection pool created. Forcing SSL via connection string and config.');
 
 
 // =================================================================
