@@ -9,7 +9,7 @@ const path = require('path');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Pool } = require('pg'); // <-- CHANGED: Import pg Pool
+const { Pool } = require('pg'); // <-- Uses PostgreSQL driver
 
 const app = express();
 const server = http.createServer(app);
@@ -17,12 +17,11 @@ const server = http.createServer(app);
 // =================================================================
 //                         DATABASE SETUP
 // =================================================================
-// CHANGED: Configure PostgreSQL connection pool
+// Configured for Render's free PostgreSQL tier
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // This is required for Render's free tier PostgreSQL
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // Required for Render connections
     }
 });
 console.log('PostgreSQL connection pool created.');
@@ -35,7 +34,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
-// --- Authentication Middleware (No changes needed here) ---
+// --- Authentication Middleware (No changes needed) ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -70,7 +69,7 @@ app.post('/api/auth/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         console.log('[REGISTER] Password hashed. Executing SQL query...');
-        // CHANGED: PostgreSQL query syntax with RETURNING id
+        // Using PostgreSQL syntax with RETURNING id to get the new user's ID
         const result = await pool.query(
             'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id',
             [username, hashedPassword]
@@ -85,8 +84,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     } catch (err) {
         console.error("[REGISTER ERROR]", err);
-        // CHANGED: PostgreSQL duplicate key error code
-        if (err.code === '23505') { // '23505' is the code for unique_violation
+        // PostgreSQL's error code for a unique constraint violation is '23505'
+        if (err.code === '23505') {
             return res.status(409).json({ message: 'Username already exists.' });
         }
         res.status(500).json({ message: 'Server error during registration.' });
@@ -96,7 +95,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        // CHANGED: PostgreSQL query syntax and result handling
+        // Using PostgreSQL syntax and destructuring the 'rows' property from the result
         const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (rows.length === 0) {
             return res.status(401).json({ message: 'Invalid credentials.' });
@@ -121,11 +120,10 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/data/all', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     try {
-        // CHANGED: Query syntax and result handling
         const { rows: likedRows } = await pool.query('SELECT song_id FROM liked_songs WHERE user_id = $1', [userId]);
         const likedSongs = likedRows.map(row => row.song_id);
 
-        // CHANGED: PostgreSQL query syntax for aggregation is different
+        // PostgreSQL uses array_agg for aggregation, not GROUP_CONCAT
         const { rows: playlistRows } = await pool.query(`
             SELECT p.id, p.name, array_agg(ps.song_id) as songs
             FROM playlists p 
@@ -135,7 +133,7 @@ app.get('/api/data/all', authenticateToken, async (req, res) => {
         
         const userPlaylists = {};
         playlistRows.forEach(p => {
-            // array_agg returns [null] for empty groups, so we check for that
+            // array_agg returns [null] for empty groups, so we handle that case
             userPlaylists[p.name] = p.songs[0] === null ? [] : p.songs;
         });
         res.json({ likedSongs, userPlaylists });
@@ -150,7 +148,7 @@ app.post('/api/data/like', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     try {
         if (like) {
-            // CHANGED: PostgreSQL syntax for ignoring duplicates
+            // PostgreSQL's "INSERT IGNORE" equivalent is "ON CONFLICT DO NOTHING"
             await pool.query('INSERT INTO liked_songs (user_id, song_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [userId, songId]);
             res.status(201).json({ message: 'Song liked.' });
         } else {
@@ -171,14 +169,12 @@ app.post('/api/data/playlists', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: 'Playlist name is required.' });
     }
     try {
-        // CHANGED: PostgreSQL syntax with RETURNING
         const result = await pool.query(
             'INSERT INTO playlists (user_id, name) VALUES ($1, $2) RETURNING id',
             [userId, playlistName]
         );
         res.status(201).json({ id: result.rows[0].id, name: playlistName, songs: [] });
     } catch (err) {
-        // CHANGED: PostgreSQL duplicate key error code
         if (err.code === '23505') {
             return res.status(409).json({ message: 'A playlist with that name already exists.' });
         }
@@ -205,14 +201,12 @@ app.post('/api/data/playlists/songs', authenticateToken, async (req, res) => {
         }
         const playlistId = playlistRows[0].id;
 
-        // CHANGED: PostgreSQL syntax for ignoring duplicates
         await pool.query(
             'INSERT INTO playlist_songs (playlist_id, song_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
             [playlistId, songId]
         );
         res.status(201).json({ message: 'Song added to playlist.' });
     } catch (err) {
-        // This handles cases where the song is already in the playlist gracefully
         if (err.code === '23505') {
             return res.status(200).json({ message: 'Song is already in the playlist.' });
         }
@@ -226,7 +220,7 @@ console.log('API routes configured.');
 // =================================================================
 //                   WEBSOCKET SERVER ("Listen Together")
 // =================================================================
-// No changes needed in this section
+// This section requires no changes for the database switch
 const wss = new WebSocket.Server({ server });
 const rooms = {};
 
