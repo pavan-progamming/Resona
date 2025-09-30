@@ -2,9 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "backend/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node backend/server.js"
+    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node server.js"
   },
   "author": "",
   "license": "ISC",
