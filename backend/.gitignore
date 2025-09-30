@@ -1,0 +1,8 @@
+# Ignore Node.js dependencies folder
+node_modules
+
+# Ignore environment variables file - VERY IMPORTANT!
+.env
+
+# Ignore common system files
+.DS_Store
