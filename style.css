@@ -498,3 +498,21 @@ header .song_side .content .buttons button:nth-child(2) { background: rgba(145, 
 header .song_side .content .buttons button:nth-child(2):hover { background: #9146FF; color: #FFFFFF; }
 .pop_song li:hover, .pop_artist li:hover, .album_card:hover, .playlist-view .songitem:hover, .recent-search-item:hover { background: rgba(145, 70, 255, 0.1); }
 .playlist-view .songitem.playing { background: rgba(145, 70, 255, 0.2) !important; }
+
+/* In style.css */
+.google-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: 1px solid #a0a0a0;
+    border-radius: 20px;
+    background: #181818; /* Or white */
+    color: #FFFFFF; /* Or black */
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.google-btn:hover {
+    background-color: #282828;
+}

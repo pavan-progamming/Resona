@@ -60,9 +60,23 @@ const newPlaylistNameInput = document.getElementById('new_playlist_name');
 // INITIALIZATION & AUTH FLOW
 // ================================
 window.onload = async () => {
+    // Check for a token in the URL from Google OAuth redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const errorFromUrl = urlParams.get('error');
+
+    if (tokenFromUrl) {
+        localStorage.setItem('resona_token', tokenFromUrl);
+        // Clean the URL so the token isn't visible on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (errorFromUrl) {
+        showToast('Google Sign-In failed. Please try again.', 'error');
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     authToken = localStorage.getItem('resona_token');
     if (authToken) {
-        // User is likely logged in, proceed to initialize the app
+        // User is logged in, proceed to initialize the app
         document.body.classList.remove('logged-out');
         mainAppHeader.style.visibility = 'visible';
         authContainer.classList.add('hidden');
@@ -143,22 +157,29 @@ function renderLoginForm() {
     authBox.innerHTML = `
         <h3>Welcome Back</h3>
         <form id="login-form">
-            <input type="text" id="login-username" placeholder="Username" required>
-            <input type="password" id="login-password" placeholder="Password" required>
+            <input type="text" id="login-username" placeholder="Username" required autocomplete="username">
+            <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
             <button type="submit">LOG IN</button>
         </form>
+        <button id="google-signin-btn" class="google-btn">Sign in with Google</button>
         <p>Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
     `;
     document.getElementById('login-form').addEventListener('submit', handleLogin);
     document.getElementById('show-signup').addEventListener('click', (e) => { e.preventDefault(); renderSignupForm(); });
+    
+    // Add event listener for the new Google Sign-In button
+    document.getElementById('google-signin-btn').addEventListener('click', () => {
+        // Redirect to our backend's Google auth initiation route
+        window.location.href = `${API_URL}/auth/google`;
+    });
 }
 
 function renderSignupForm() {
     authBox.innerHTML = `
         <h3>Create Account</h3>
         <form id="signup-form">
-            <input type="text" id="signup-username" placeholder="Choose a Username" required>
-            <input type="password" id="signup-password" placeholder="Create a Password" required>
+            <input type="text" id="signup-username" placeholder="Choose a Username" required autocomplete="username">
+            <input type="password" id="signup-password" placeholder="Create a Password" required autocomplete="new-password">
             <button type="submit">SIGN UP</button>
         </form>
         <p>Already have an account? <a href="#" id="show-login">Log In</a></p>
@@ -381,8 +402,7 @@ function updateSessionUI() {
 
 function connectWebSocket() {
     if (socket && socket.readyState === WebSocket.OPEN) return;
-    const socketUrl = 'wss://resona-sc7k.onrender.com'; // Use for local dev
-    // const socketUrl = 'wss://your-production-url.com'; // Use for production
+    const socketUrl = 'wss://resona-sc7k.onrender.com';
     socket = new WebSocket(socketUrl);
 
     socket.onopen = () => {
@@ -460,7 +480,7 @@ function checkForSessionLink() {
         if (potentialRoomId) {
             roomId = potentialRoomId;
             connectWebSocket();
-            window.history.pushState("", document.title, window.location.pathname + window.location.search);
+            window.history.replaceState("", document.title, window.location.pathname + window.location.search);
         }
     }
 }
