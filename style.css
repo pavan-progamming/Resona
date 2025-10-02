@@ -516,3 +516,100 @@ header .song_side .content .buttons button:nth-child(2):hover { background: #914
 .google-btn:hover {
     background-color: #282828;
 }
+/* Add these new rules to your existing style.css file. 
+   You can place them in a new section at the end. */
+
+/* ============================================== */
+/*        NEW FEATURE: ARTIST RADIO BUTTON        */
+/* ============================================== */
+.start_artist_radio_btn {
+    width: 150px;
+    height: 35px;
+    margin-left: 15px;
+    border: 1px solid #fff;
+    outline: none;
+    border-radius: 20px;
+    background: transparent;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .3s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.start_artist_radio_btn:hover {
+    background: #fff;
+    color: #111727;
+}
+
+/* ============================================== */
+/*         NEW FEATURE: SLEEP TIMER               */
+/* ============================================== */
+.sleep-timer-container {
+    position: relative;
+}
+#sleep_timer_btn {
+    font-size: 18px;
+    color: #fff;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+#sleep_timer_btn.active {
+    color: #9146FF; /* Highlight color when timer is active */
+}
+#sleep_timer_modal {
+    position: absolute;
+    bottom: 150%; /* Position it above the icon */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111727;
+    border: 1px solid #090f1f;
+    border-radius: 8px;
+    padding: 10px;
+    width: 150px;
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+#sleep_timer_modal h6 {
+    font-size: 12px;
+    color: #a0a0a0;
+    text-align: center;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+#sleep_timer_modal button {
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    transition: background-color 0.2s ease;
+}
+#sleep_timer_modal button:hover {
+    background-color: rgba(145, 70, 255, 0.2);
+}
+#sleep_timer_modal hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 5px 0;
+}
+#cancel_sleep_timer_btn {
+    color: #E50914 !important;
+    font-weight: bold;
+}
+
+/* On mobile, place the sleep timer icon within the other side controls */
+@media screen and (max-width: 930px) {
+    .player-side-controls {
+        gap: 15px; /* Add some space for the new icon */
+    }
+}

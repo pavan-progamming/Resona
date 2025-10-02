@@ -85,6 +85,19 @@
             </div>
           </div>
           <div class="player-side-controls">
+            <!-- === NEW FEATURE: SLEEP TIMER ICON === -->
+            <div class="sleep-timer-container">
+                <i class="bi bi-moon-stars-fill" id="sleep_timer_btn" title="Sleep Timer"></i>
+                <div id="sleep_timer_modal" class="hidden">
+                    <h6>Sleep Timer</h6>
+                    <button data-minutes="15">15 minutes</button>
+                    <button data-minutes="30">30 minutes</button>
+                    <button data-minutes="45">45 minutes</button>
+                    <button data-minutes="60">1 hour</button>
+                    <hr>
+                    <button id="cancel_sleep_timer_btn" class="hidden">Cancel Timer</button>
+                </div>
+            </div>
             <i class="bi bi-card-text" id="lyrics_btn" title="Lyrics"></i>
             <i class="bi bi-heart" id="like_master" title="Like"></i>
             <div class="vol">
@@ -135,6 +148,15 @@
             <div class="language_songs">
                 <div class="h4"><h4>Hindi Songs</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="hindi_song_left"></i><i class="bi bi-arrow-right-short" id="hindi_song_right"></i></div></div>
                 <div class="pop_song" id="hindi_songs_container"></div>
+            </div>
+            <!-- === NEW CONTENT: ENGLISH & TAMIL SONGS === -->
+            <div class="language_songs">
+                <div class="h4"><h4>English Songs</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="english_song_left"></i><i class="bi bi-arrow-right-short" id="english_song_right"></i></div></div>
+                <div class="pop_song" id="english_songs_container"></div>
+            </div>
+            <div class="language_songs">
+                <div class="h4"><h4>Tamil Songs</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="tamil_song_left"></i><i class="bi bi-arrow-right-short" id="tamil_song_right"></i></div></div>
+                <div class="pop_song" id="tamil_songs_container"></div>
             </div>
             <div class="popular_artists">
                 <div class="h4"><h4>Popular Artists</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="pop_artist_left"></i><i class="bi bi-arrow-right-short" id="pop_artist_right"></i></div></div>
