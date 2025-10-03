@@ -339,6 +339,15 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// Simple debounce utility to limit how often a function runs
+function debounce(func, wait) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 function generateSkeletonCards(count) {
     let skeletonHTML = '<div class="skeleton-card-container">';
     for (let i = 0; i < count; i++) {
@@ -986,6 +995,21 @@ function setupSearch() {
     const backBtn = document.getElementById('back_to_main_view_btn');
     searchInput.onfocus = showSearchPage;
     backBtn.onclick = hideSearchPage;
+    
+    // Live search as user types (debounced)
+    const runLiveSearch = debounce(() => {
+        const term = searchInput.value.trim();
+        if (term.length >= 2) {
+            executeSearchAndShowResults(term, { updateRecents: false });
+        } else {
+            populateRecentSearchesView();
+        }
+    }, 350);
+    
+    searchInput.addEventListener('input', () => {
+        if (!isSearchActive) showSearchPage();
+        runLiveSearch();
+    });
     searchInput.onkeydown = (e) => { if (e.key === 'Enter') { const term = searchInput.value.trim(); if(term) executeSearchAndShowResults(term); } };
     document.getElementById('search_results_view').addEventListener('click', (e) => {
         const item = e.target.closest('.recent-search-item');
@@ -1013,12 +1037,14 @@ function populateRecentSearchesView() {
     html += recentSearches.length ? `<ul class="recent-searches-list">${recentSearches.map(t => `<li class="recent-search-item" data-term="${t}"><i class="bi bi-clock-history"></i><span>${t}</span></li>`).join('')}</ul>` : '<p style="color: #a4a8b4;">Search for songs or artists.</p>';
     container.innerHTML = html;
 }
-async function executeSearchAndShowResults(searchTerm) {
+async function executeSearchAndShowResults(searchTerm, options = { updateRecents: true }) {
     if (!searchTerm) return;
-    recentSearches = recentSearches.filter(t => t.toLowerCase() !== searchTerm.toLowerCase());
-    recentSearches.unshift(searchTerm);
-    if (recentSearches.length > 10) recentSearches = recentSearches.slice(0, 10);
-    saveLocalSettings();
+    if (options.updateRecents) {
+        recentSearches = recentSearches.filter(t => t.toLowerCase() !== searchTerm.toLowerCase());
+        recentSearches.unshift(searchTerm);
+        if (recentSearches.length > 10) recentSearches = recentSearches.slice(0, 10);
+        saveLocalSettings();
+    }
     const view = document.getElementById('search_results_view');
     view.innerHTML = `<h1 style="color: #a4a8b4;">Searching for "${searchTerm}"...</h1>`;
     const results = await fetchSongsByQuery(searchTerm, 50);
