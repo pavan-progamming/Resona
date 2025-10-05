@@ -61,52 +61,57 @@
         </div>
 
         <div class="master_play">
-          <div class="wave" id="wave">
-            <div class="wave1"></div><div class="wave1"></div><div class="wave1"></div>
-          </div>
-          <img src="https://placehold.co/180x180/121212/a0a0a0?text=Music" alt="Album Art" id="poster_master_play"/>
-          <h5 id="title">Select a Song<div class="subtitle">to start listening</div></h5>
-          <div class="player-controls">
-            <div class="seek-container">
-              <span id="currentStart">0:00</span>
-              <div class="bar">
-                <input type="range" id="seek" min="0" max="100" value="0" />
-                <div class="bar2" id="bar2"></div>
-                <div class="dot"></div>
-              </div>
-              <span id="currentEnd">0:00</span>
+            <!-- This div will be tapped on mobile to open the fullscreen view -->
+            <div class="song-info-container" id="open_now_playing_view_btn">
+                <div class="wave" id="wave">
+                    <div class="wave1"></div><div class="wave1"></div><div class="wave1"></div>
+                </div>
+                <img src="https://placehold.co/180x180/121212/a0a0a0?text=Music" alt="Album Art" id="poster_master_play"/>
+                <h5 id="title">Select a Song<div class="subtitle">to start listening</div></h5>
             </div>
-            <div class="buttons-container">
-              <i class="bi bi-shuffle" id="shuffle" title="Shuffle"></i>
-              <i class="bi bi-skip-start-fill" id="back" title="Previous"></i>
-              <i class="bi bi-play-circle-fill" id="masterPlay" title="Play"></i>
-              <i class="bi bi-skip-end-fill" id="next" title="Next"></i>
-              <i class="bi bi-repeat" id="repeat" title="Repeat"></i>
-            </div>
-          </div>
-          <div class="player-side-controls">
-            <!-- === NEW FEATURE: SLEEP TIMER ICON === -->
-            <div class="sleep-timer-container">
-                <i class="bi bi-moon-stars-fill" id="sleep_timer_btn" title="Sleep Timer"></i>
-                <div id="sleep_timer_modal" class="hidden">
-                    <h6>Sleep Timer</h6>
-                    <button data-minutes="15">15 minutes</button>
-                    <button data-minutes="30">30 minutes</button>
-                    <button data-minutes="45">45 minutes</button>
-                    <button data-minutes="60">1 hour</button>
-                    <hr>
-                    <button id="cancel_sleep_timer_btn" class="hidden">Cancel Timer</button>
+            
+            <!-- Player controls (seek bar, main buttons) -->
+            <div class="player-controls">
+                <div class="seek-container">
+                    <span id="currentStart">0:00</span>
+                    <div class="bar">
+                        <input type="range" id="seek" min="0" max="100" value="0" />
+                        <div class="bar2" id="bar2"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <span id="currentEnd">0:00</span>
+                </div>
+                <div class="buttons-container">
+                    <i class="bi bi-shuffle" id="shuffle" title="Shuffle"></i>
+                    <i class="bi bi-skip-start-fill" id="back" title="Previous"></i>
+                    <i class="bi bi-play-circle-fill" id="masterPlay" title="Play"></i>
+                    <i class="bi bi-skip-end-fill" id="next" title="Next"></i>
+                    <i class="bi bi-repeat" id="repeat" title="Repeat"></i>
                 </div>
             </div>
-            <i class="bi bi-card-text" id="lyrics_btn" title="Lyrics"></i>
-            <i class="bi bi-heart" id="like_master" title="Like"></i>
-            <div class="vol">
-              <i class="bi bi-volume-up-fill" id="vol_icon"></i>
-              <input type="range" min="0" max="100" id="vol" value="100" />
-              <div class="vol_bar"></div>
-              <div class="dot" id="vol_dot"></div>
+            
+            <!-- Side controls (volume, more options menu) -->
+            <div class="player-side-controls">
+                <!-- The desktop-only volume slider -->
+                <div class="vol">
+                    <i class="bi bi-volume-up-fill" id="vol_icon"></i>
+                    <input type="range" min="0" max="100" id="vol" value="100" />
+                    <div class="vol_bar"></div>
+                    <div class="dot" id="vol_dot"></div>
+                </div>
+                
+                <!-- The "More Options" menu for both desktop and mobile -->
+                <i class="bi bi-three-dots-vertical" id="more_options_btn" title="More Options"></i>
+                <div id="more_options_menu" class="hidden">
+                    <ul>
+                        <li data-action="like"><i class="bi bi-heart" id="like_menu_icon"></i><span id="like_menu_text">Like</span></li>
+                        <li data-action="add-to-queue"><i class="bi bi-music-note-list"></i><span>Add to Queue</span></li>
+                        <li data-action="sleep-timer"><i class="bi bi-moon-stars-fill"></i><span>Sleep Timer</span></li>
+                        <li data-action="lyrics"><i class="bi bi-card-text"></i><span>Show Lyrics</span></li>
+                        <li data-action="listen-together"><i class="bi bi-people-fill"></i><span>Listen Together</span></li>
+                    </ul>
+                </div>
             </div>
-          </div>
         </div>
       </div>
 
@@ -149,7 +154,6 @@
                 <div class="h4"><h4>Hindi Songs</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="hindi_song_left"></i><i class="bi bi-arrow-right-short" id="hindi_song_right"></i></div></div>
                 <div class="pop_song" id="hindi_songs_container"></div>
             </div>
-            <!-- === NEW CONTENT: ENGLISH & TAMIL SONGS === -->
             <div class="language_songs">
                 <div class="h4"><h4>English Songs</h4><div class="btn_s"><i class="bi bi-arrow-left-short" id="english_song_left"></i><i class="bi bi-arrow-right-short" id="english_song_right"></i></div></div>
                 <div class="pop_song" id="english_songs_container"></div>
@@ -204,6 +208,19 @@
           <h3 id="lyrics_song_title">Lyrics</h3>
           <div id="lyrics_content" style="white-space: pre-wrap; max-height: 60vh; overflow-y: auto; text-align: center; line-height: 1.8;"></div>
         </div>
+      </div>
+      
+      <div id="sleep_timer_modal" class="modal">
+          <div class="modal-content">
+              <i class="bi bi-x-lg" id="close_sleep_timer_modal"></i>
+              <h6>Sleep Timer</h6>
+              <button data-minutes="15">15 minutes</button>
+              <button data-minutes="30">30 minutes</button>
+              <button data-minutes="45">45 minutes</button>
+              <button data-minutes="60">1 hour</button>
+              <hr>
+              <button id="cancel_sleep_timer_btn" class="hidden">Cancel Timer</button>
+          </div>
       </div>
 
       <div id="add_to_playlist_modal" class="modal">
