@@ -1276,6 +1276,9 @@ function attachAllEventListeners() {
             case 'add-to-queue':
                 addSongToQueue(index);
                 break;
+            case 'download':
+                handleDownload();
+                break;
             case 'sleep-timer':
                 sleepTimerModal.style.display = 'block';
                 break;
@@ -1342,4 +1345,40 @@ async function restoreLastSong() {
         }
         if (songData) playSong(songData.id, false);
     }
+}
+// Add this new function to app.js
+
+function handleDownload() {
+    if (!index) {
+        showToast("Please play a song to download it.");
+        return;
+    }
+
+    const songData = allSongs.get(index);
+    if (!songData || !songData.audioUrl) {
+        showToast("Could not find a download link for this song.", "error");
+        return;
+    }
+
+    // Create a clean filename from the song title and artist
+    const songTitle = songData.songName.split('<br>')[0];
+    const artistName = songData.songName.split('<div class="subtitle">')[1].replace('</div>', '');
+    let filename = `${artistName} - ${songTitle}.mp3`;
+    
+    // Sanitize the filename by removing characters that are invalid in file systems
+    filename = filename.replace(/[\\/:*?"<>|]/g, ''); 
+
+    // Create a temporary anchor tag to trigger the download
+    const link = document.createElement('a');
+    link.href = songData.audioUrl;
+    link.download = filename;
+    
+    // Note: This works if the server sends the correct headers. 
+    // If not, the file might open in a new tab instead of downloading directly.
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast(`Downloading: ${songTitle}`, 'success');
 }
