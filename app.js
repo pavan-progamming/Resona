@@ -10,6 +10,7 @@ const poster_master_play = document.getElementById('poster_master_play');
 const title = document.getElementById('title');
 const openNowPlayingBtn = document.getElementById('open_now_playing_view_btn');
 
+
 // --- Auth & Initial Load Elements ---
 const preloader = document.getElementById('preloader');
 const authContainer = document.getElementById('auth-container');
@@ -35,6 +36,7 @@ let bannerSlideshowInterval;
 let lastActiveView = 'discovery_carousels';
 let isSearchActive = false;
 let sleepTimerId = null; 
+let debounceTimeout = null; // For live search debouncing
 
 // --- Authentication State ---
 let authToken = null;
@@ -59,12 +61,6 @@ const newPlaylistNameInput = document.getElementById('new_playlist_name');
 const sleepTimerModal = document.getElementById('sleep_timer_modal');
 const moreOptionsBtn = document.getElementById('more_options_btn');
 const moreOptionsMenu = document.getElementById('more_options_menu');
-
-// Add these lines near the top of app.js
-const vol_icon = document.getElementById('vol_icon');
-const vol_input = document.getElementById('vol');
-const vol_bar = document.querySelector('.vol_bar');
-const vol_dot = document.getElementById('vol_dot');
 
 // ================================
 // INITIALIZATION & AUTH FLOW
@@ -527,7 +523,6 @@ function addSongToPlaylist(playlistName) {
     if (songToAddToPlaylist && userPlaylists[playlistName]) {
         if (!userPlaylists[playlistName].includes(songToAddToPlaylist)) {
             userPlaylists[playlistName].push(songToAddToPlaylist);
-            // TODO: Add API call to save playlist state to the database
             showToast(`Added to "${playlistName}"`, 'success');
         } else {
             showToast(`Song is already in "${playlistName}"`);
@@ -594,7 +589,6 @@ function playSong(songId, autoPlay = true) {
     saveLocalSettings();
     if (window.innerWidth <= 930) {
         populateNowPlayingView(songData);
-        showNowPlayingView();
     }
 }
 
@@ -973,48 +967,99 @@ function syncPlayerUI() {
 function setupSearch() {
     const searchInput = document.querySelector('.search input');
     const backBtn = document.getElementById('back_to_main_view_btn');
+
     searchInput.onfocus = showSearchPage;
     backBtn.onclick = hideSearchPage;
-    searchInput.onkeydown = (e) => { if (e.key === 'Enter') { const term = searchInput.value.trim(); if(term) executeSearchAndShowResults(term); } };
-    document.getElementById('search_results_view').addEventListener('click', (e) => {
-        const item = e.target.closest('.recent-search-item');
-        if (item) {
-            e.preventDefault();
-            const term = item.dataset.term;
-            searchInput.value = term;
-            executeSearchAndShowResults(term);
+
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.trim();
+        clearTimeout(debounceTimeout);
+
+        if (searchTerm.length < 2) {
+            populateRecentSearchesView();
+            return;
+        }
+
+        debounceTimeout = setTimeout(async () => {
+            executeSearchAndShowResults(searchTerm, false);
+        }, 400);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            clearTimeout(debounceTimeout);
+            const term = searchInput.value.trim();
+            if (term) {
+                executeSearchAndShowResults(term, true); 
+            }
         }
     });
 }
+
 function showSearchPage() {
-    if (isSearchActive) return; isSearchActive = true; songSide.classList.add('search-active');
-    hideAllMainViews(); document.getElementById('search_results_view').classList.remove('hidden');
+    if (isSearchActive) return; 
+    isSearchActive = true; 
+    songSide.classList.add('search-active');
+    hideAllMainViews(); 
+    document.getElementById('search_results_view').classList.remove('hidden');
     populateRecentSearchesView();
 }
+
 function hideSearchPage() {
-    if (!isSearchActive) return; isSearchActive = false; songSide.classList.remove('search-active');
-    document.querySelector('.search input').value = ''; hideAllMainViews();
+    if (!isSearchActive) return; 
+    isSearchActive = false; 
+    songSide.classList.remove('search-active');
+    document.querySelector('.search input').value = ''; 
+    hideAllMainViews();
     document.getElementById(lastActiveView)?.classList.remove('hidden');
 }
+
 function populateRecentSearchesView() {
     const container = document.getElementById('search_results_view');
+    if (document.querySelector('.search input').value.trim().length > 0) {
+        return;
+    }
+    
     let html = '<h1>Recent Searches</h1>';
     html += recentSearches.length ? `<ul class="recent-searches-list">${recentSearches.map(t => `<li class="recent-search-item" data-term="${t}"><i class="bi bi-clock-history"></i><span>${t}</span></li>`).join('')}</ul>` : '<p style="color: #a4a8b4;">Search for songs or artists.</p>';
     container.innerHTML = html;
+
+    container.querySelectorAll('.recent-search-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const term = item.dataset.term;
+            document.querySelector('.search input').value = term;
+            executeSearchAndShowResults(term, true);
+        });
+    });
 }
-async function executeSearchAndShowResults(searchTerm) {
+
+async function executeSearchAndShowResults(searchTerm, saveToRecents = true) {
     if (!searchTerm) return;
-    recentSearches = recentSearches.filter(t => t.toLowerCase() !== searchTerm.toLowerCase());
-    recentSearches.unshift(searchTerm);
-    if (recentSearches.length > 10) recentSearches = recentSearches.slice(0, 10);
-    saveLocalSettings();
+
+    if (saveToRecents) {
+        recentSearches = recentSearches.filter(t => t.toLowerCase() !== searchTerm.toLowerCase());
+        recentSearches.unshift(searchTerm);
+        if (recentSearches.length > 10) recentSearches = recentSearches.slice(0, 10);
+        saveLocalSettings();
+    }
+
     const view = document.getElementById('search_results_view');
-    view.innerHTML = `<h1 style="color: #a4a8b4;">Searching for "${searchTerm}"...</h1>`;
+    if (view.querySelector('h1')?.innerText.includes('Recent Searches')) {
+        view.innerHTML = `<h1 style="color: #a4a8b4;">Searching for "${searchTerm}"...</h1>`;
+    }
+
     const results = await fetchSongsByQuery(searchTerm, 50);
     populateSearchResultsView(results, searchTerm);
 }
+
 function populateSearchResultsView(songs, query) {
     const container = document.getElementById('search_results_view');
+    
+    const currentQuery = document.querySelector('.search input').value.trim();
+    if (!isSearchActive || currentQuery.toLowerCase() !== query.toLowerCase()) {
+        return;
+    }
+
     let html = `<h1><span>Results for:</span> ${query}</h1>`;
     if (songs && songs.length) {
         songs.forEach(s => { if (!allSongs.has(s.id)) allSongs.set(s.id, s); });
@@ -1108,7 +1153,7 @@ function cancelSleepTimer() {
 }
 
 // =============================================
-// KEYBOARD SHORTCUTS LOGIC
+// KEYBOARD SHORTCUTS & VOLUME LOGIC
 // =============================================
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
@@ -1119,24 +1164,24 @@ function setupKeyboardShortcuts() {
             case 'ArrowRight': handleNextSong(); break;
             case 'ArrowLeft': handlePreviousSong(); break;
             case 'KeyM':
-                const volIcon = document.getElementById('vol_icon');
-                const volInput = document.getElementById('vol');
+                const vol_input = document.getElementById('vol');
                 if (music.volume > 0) {
-                    music.volume = 0;
-                    volInput.value = 0;
-                    volIcon.classList.replace('bi-volume-up-fill', 'bi-volume-mute-fill');
+                    vol_input.value = 0;
                 } else {
-                    music.volume = 1;
-                    volInput.value = 100;
-                    volIcon.classList.replace('bi-volume-mute-fill', 'bi-volume-up-fill');
+                    vol_input.value = 100;
                 }
+                vol_input.dispatchEvent(new Event('input'));
                 break;
         }
     });
 }
 
-//volume controls
 function setupVolumeControls() {
+    const vol_icon = document.getElementById('vol_icon');
+    const vol_input = document.getElementById('vol');
+    const vol_bar = document.querySelector('.vol_bar');
+    const vol_dot = document.getElementById('vol_dot');
+
     vol_input.addEventListener('input', () => {
         let vol_a = vol_input.value;
         vol_bar.style.width = `${vol_a}%`;
@@ -1144,41 +1189,28 @@ function setupVolumeControls() {
         music.volume = vol_a / 100;
 
         if (music.volume == 0) {
-            vol_icon.classList.remove('bi-volume-up-fill');
-            vol_icon.classList.remove('bi-volume-down-fill');
+            vol_icon.classList.remove('bi-volume-up-fill', 'bi-volume-down-fill');
             vol_icon.classList.add('bi-volume-mute-fill');
         } else if (music.volume > 0 && music.volume <= 0.5) {
-            vol_icon.classList.remove('bi-volume-up-fill');
+            vol_icon.classList.remove('bi-volume-up-fill', 'bi-volume-mute-fill');
             vol_icon.classList.add('bi-volume-down-fill');
-            vol_icon.classList.remove('bi-volume-mute-fill');
         } else {
+            vol_icon.classList.remove('bi-volume-down-fill', 'bi-volume-mute-fill');
             vol_icon.classList.add('bi-volume-up-fill');
-            vol_icon.classList.remove('bi-volume-down-fill');
-            vol_icon.classList.remove('bi-volume-mute-fill');
         }
     });
 
-    // Mute/Unmute logic
     vol_icon.addEventListener('click', () => {
         if (music.volume > 0) {
-            music.volume = 0;
             vol_input.value = 0;
-            vol_bar.style.width = '0%';
-            vol_dot.style.left = '0%';
-            vol_icon.classList.remove('bi-volume-up-fill');
-            vol_icon.classList.remove('bi-volume-down-fill');
-            vol_icon.classList.add('bi-volume-mute-fill');
         } else {
-            music.volume = 1;
             vol_input.value = 100;
-            vol_bar.style.width = '100%';
-            vol_dot.style.left = '100%';
-            vol_icon.classList.remove('bi-volume-mute-fill');
-            vol_icon.classList.remove('bi-volume-down-fill');
-            vol_icon.classList.add('bi-volume-up-fill');
         }
+        vol_input.dispatchEvent(new Event('input'));
     });
 }
+
+
 // ================================
 // EVENT LISTENERS
 // ================================
@@ -1222,7 +1254,6 @@ function attachAllEventListeners() {
     document.getElementById('repeat').addEventListener('click', () => { repeatMode = (repeatMode + 1) % 3; syncPlayerUI(); saveLocalSettings(); });
     document.getElementById('seek').onchange = () => { if (music.duration) music.currentTime = (document.getElementById('seek').value * music.duration) / 100; };
 
-    // --- NEW: "More Options" Menu Logic ---
     moreOptionsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         moreOptionsMenu.classList.toggle('hidden');
@@ -1260,12 +1291,11 @@ function attachAllEventListeners() {
     });
 
     openNowPlayingBtn.addEventListener('click', () => {
-        // This should only trigger on mobile when the button is part of the mini-player
         if (window.innerWidth <= 930) {
             showNowPlayingView();
         }
     });
-
+    
     document.body.addEventListener('click', () => {
         if (!moreOptionsMenu.classList.contains('hidden')) {
             moreOptionsMenu.classList.add('hidden');

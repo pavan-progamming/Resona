@@ -9,14 +9,13 @@ body {
     width: 100%;
     height: 100vh;
     background: #121213;
-    display: grid;
-    place-items:center;
-    overflow: hidden; /* Prevent scrolling when auth is visible */
+    padding: 2.5vh; /* This padding creates the space around the app container */
+    overflow: hidden;
 }
 header {
     position: relative;
-    width: 85%;
-    height: 95%;
+    width: 100%; /* Fill the new padded area */
+    height: 100%; /* Fill the new padded area */
     display: flex;
     overflow:hidden;
     border-radius: 10px;
@@ -277,13 +276,11 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
 /* ============================================== */
 /*                MOBILE STYLES                   */
 /* ============================================== */
-/* START: Replace the entire mobile media query block with this */
-/* ============================================== */
-/*                MOBILE STYLES                   */
-/* ============================================== */
 @media screen and (max-width: 930px) {
-    header { width: 100%; height: 100%; border-radius: 0; }
-    header .song_side { width: 100%; padding-bottom: 70px; /* Space for mini-player */ }
+    header { width: 100%; height: 100%; border-radius: 0; padding: 0; }
+    body { padding: 0; } /* Remove padding for fullscreen mobile experience */
+
+    header .song_side { width: 100%; padding-bottom: 65px; /* Space for mini-player */ }
     #menu_list { display: block; z-index: 5; font-size: 24px; color: #fff; }
     header .song_side nav { padding: 10px 15px; }
     header .menu_side {
@@ -292,7 +289,7 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
     }
     header .menu_side.active { transform: translateX(0%); }
 
-    /* --- NEW MOBILE MINI-PLAYER STYLES --- */
+    /* --- MOBILE MINI-PLAYER STYLES --- */
     header .menu_side .master_play {
         position: fixed;
         bottom: 0;
@@ -305,7 +302,6 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
         box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
         padding: 0 10px;
         margin-top: 0;
-        /* Use flexbox for layout */
         display: flex;
         flex-direction: row; /* Horizontal layout */
         align-items: center;
@@ -351,31 +347,15 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
     .master_play .wave { display: none; } /* Hide the wave animation on mini-player */
 
     /* The main play/pause button on the mini-player */
-    .master_play .player-controls {
-        width: auto;
-        margin: 0;
-    }
-    .master_play .buttons-container {
-        margin: 0;
-        gap: 0;
-    }
-    #masterPlay {
-        font-size: 38px;
-    }
+    .master_play .player-controls { width: auto; margin: 0; }
+    .master_play .buttons-container { margin: 0; gap: 0; }
+    #masterPlay { font-size: 38px; }
 
     /* The side controls (just the three-dots menu on mobile) */
-    .master_play .player-side-controls {
-        position: static;
-        width: auto;
-        margin: 0;
-        padding-left: 10px;
-    }
-    #more_options_menu {
-        right: 10px;
-        bottom: 110%; /* Position above the mini-player */
-    }
+    .master_play .player-side-controls { position: static; width: auto; margin: 0; padding-left: 10px; }
+    #more_options_menu { right: 10px; bottom: 110%; /* Position above the mini-player */ }
 
-    /* Styles for other views on mobile */
+    /* --- MOBILE FULLSCREEN "NOW PLAYING" VIEW --- */
     body.now-playing-active header .menu_side .master_play { display: flex !important; } /* KEEP mini player visible */
     
     #now_playing_view {
@@ -405,7 +385,6 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
     .songitem .action-icons { opacity: 1; pointer-events: all; }
     .playlist-view .songitem .song_details { padding-right: 60px; }
 }
-/* END: Replacement block */
 
 /* ============================================== */
 /*              MODAL & LIBRARY STYLES            */
@@ -444,7 +423,6 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
 .logout-btn:hover { background-color: #2abcc5; transform: scale(1.02); }
 #library_view .song-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 #library_view .song-list-header button { background: none; border: none; color: #36e2ec; font-size: 14px; font-weight: 600; cursor: pointer; }
-
 
 /* ============================================== */
 /*       PLAYLIST, QUEUE, ICONS STYLES            */
@@ -515,7 +493,6 @@ header .song_side .content .buttons button:nth-child(2):hover{ background: #fff;
     margin-bottom: 20px; user-select: all; border: 1px solid #333;
 }
 .session-info small { display: block; margin-top: 20px; color: #888; }
-
 
 /* ============================================== */
 /*             UI ENHANCEMENTS & FEEDBACK         */
@@ -597,7 +574,3 @@ header .song_side .content .buttons button:nth-child(2):hover { background: #914
 #more_options_menu li:hover { background-color: rgba(145, 70, 255, 0.2); }
 #more_options_menu li i { font-size: 18px; margin-right: 15px; width: 20px; text-align: center; }
 #more_options_menu li i#like_menu_icon.liked { color: #9146FF; }
-
-@media screen and (max-width: 930px) {
-    #more_options_menu { right: 5px; }
-}
